@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css">
+    <!-- Cambié el enlace de Font Awesome para asegurar la carga correcta -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
+    <title>Iniciar sesión</title>
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-firestore.js"></script>
+    <style>
+      body {
+          background-color: #2e7d32; /* Verde clásico */
+          color: #fff;
+          font-family: 'Poppins', sans-serif;
+          margin: 0;
+          padding: 0;
+      }
+
+      .container {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 30px;
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Sombras más intensas */
+          margin-top: 50px;
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+      }
+
+      h1 {
+          color: #f1f1f1; /* Blanco suave */
+          text-align: center;
+          font-size: 2.5rem;
+          margin-bottom: 20px;
+      }
+
+      .btn-info {
+          width: 100%;
+          padding: 15px;
+          font-size: 1.2rem;
+          background-color: #388e3c; /* Verde más clásico */
+          border: none;
+          border-radius: 8px;
+          transition: background-color 0.3s ease;
+      }
+
+      .btn-info:hover {
+          background-color: #4caf50; /* Verde claro al pasar el mouse */
+      }
+
+      .form-control {
+          border-radius: 10px;
+          font-size: 1.1rem;
+      }
+
+      #error-message {
+          color: #e74c3c; /* Rojo para los errores */
+          text-align: center;
+          display: none;
+      }
+
+      .text-center i {
+          color: #fff;
+      }
+
+      @media (max-width: 576px) {
+          .container {
+              padding: 20px;
+              margin-top: 20px;
+          }
+
+          h1 {
+              font-size: 2rem;
+          }
+
+          .btn-info {
+              font-size: 1rem;
+              padding: 12px;
+          }
+      }
+
+      /* Ícono de login centrado */
+      .login-icon {
+          font-size: 5rem;
+          color: #17af45;
+          margin-bottom: 20px;
+      }
+
+
+    </style>
+  </head>
+  <body>
+    <div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+      <div class="card p-4 shadow" style="width: 100%; max-width: 400px; border-radius: 15px; background: #fff;">
+        <div class="text-center mb-4">
+          <i class="fas fa-user-circle fa-5x text-info"></i>
+        </div>
+        <h3 class="text-center mb-4" style="color: #388e3c;">Iniciar sesión</h3>
+
+        <input type="text" id="dni" placeholder="DNI" class="form-control my-3" required>
+        <input type="password" id="password" placeholder="Contraseña (DNI)" class="form-control my-3" required>
+        
+        <button class="btn btn-info w-100 my-3" onclick="login()">Iniciar sesión</button>
+
+        <div id="error-message" class="my-3"></div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

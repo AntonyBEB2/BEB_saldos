@@ -1,0 +1,146 @@
+// Configuración personal de Firebase
+firebase.initializeApp({
+    apiKey: "AIzaSyC8Ys-PGjwB7DhV-Gm5Jdc23Y3VEXx34qc",
+    authDomain: "proyectousuarios-bac50.firebaseapp.com",
+    projectId: "proyectousuarios-bac50"
+});
+  
+// Initialize Cloud Firestore through Firebase
+var db = firebase.firestore();
+
+// Leer documentos y mostrar en la tabla
+var tabla = document.getElementById('tabla');
+db.collection("users").onSnapshot((querySnapshot) => {
+    tabla.innerHTML = '';
+    querySnapshot.forEach((doc) => {
+        console.log(`${doc.id} => ${doc.data().doc}`);
+        tabla.innerHTML += `
+        <tr>
+        <th scope="row">${doc.id}</th>
+        <td>${doc.data().doc}</td>
+        <td>${doc.data().name}</td>
+        <td>${doc.data().saldo}</td>
+        <td><button class="btn btn-danger" onclick="eliminar('${doc.id}')">Eliminar</button></td>
+        <td><button class="btn btn-warning" onclick="editar('${doc.id}','${doc.data().doc}','${doc.data().name}','${doc.data().saldo}')">Editar</button></td>
+        </tr>
+        `;
+    });
+});
+
+// Borrar documentos
+function eliminar(id){
+    db.collection("users").doc(id).delete().then(function() {
+        console.log("Document successfully deleted!");
+    }).catch(function(error) {
+        console.error("Error removing document: ", error);
+    });
+}
+
+// Mostrar los campos de edición y llenar con los datos
+function editar(id, dni, nombre, total) {
+    // Mostrar los campos de entrada
+    document.getElementById('editFields').style.display = 'block';
+
+    // Rellenar los campos con los datos
+    document.getElementById('dni').value = dni;
+    document.getElementById('nombre').value = nombre;
+    document.getElementById('total').value = total;
+
+    // Guardar el ID del documento a editar
+    document.getElementById('boton').onclick = function() {
+        guardarEdicion(id);
+    };
+}
+
+// Función para guardar la edición
+function guardarEdicion(id) {
+    var dni = document.getElementById('dni').value;
+    var nombre = document.getElementById('nombre').value;
+    var total = parseFloat(document.getElementById('total').value); // Convertir a número
+
+    // Actualizar el documento en Firestore
+    db.collection("users").doc(id).update({
+        doc: dni,
+        name: nombre,
+        saldo: total
+    })
+    .then(function() {
+        console.log("Document successfully updated!");
+        // Ocultar los campos de edición
+        document.getElementById('editFields').style.display = 'none';
+
+        // Limpiar los campos de texto
+        document.getElementById('dni').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('total').value = '';
+    })
+    .catch(function(error) {
+        console.error("Error updating document: ", error);
+    });
+}
+
+// Función para leer el archivo Excel
+function leerExcel(event) {
+    var file = event.target.files[0];
+    var reader = new FileReader();
+    
+    reader.onload = function(e) {
+        var data = e.target.result;
+        var workbook = XLSX.read(data, {type: 'binary'});
+        
+        // Asumiendo que los datos están en la primera hoja (puedes cambiar el índice si es necesario)
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var json = XLSX.utils.sheet_to_json(sheet);
+        
+        // Ahora `json` contiene un arreglo con los datos del Excel
+        console.log(json); // Aquí puedes verificar los datos leídos
+        
+        // Guardar los datos en Firestore
+        json.forEach(function(item) {
+            var dni = item.dni;
+            var nombre = item.nombre;
+            var total = parseFloat(item.total); // Asegurarnos de que el total sea un número
+
+            // Verificar si el cliente ya existe en la base de datos
+            db.collection("users").where("doc", "==", dni).get()
+            .then(function(querySnapshot) {
+                if (querySnapshot.empty) {
+                    // Si no existe, agregar un nuevo cliente
+                    db.collection("users").add({
+                        doc: dni,
+                        name: nombre,
+                        saldo: total
+                    })
+                    .then(function(docRef) {
+                        console.log("Document written with ID: ", docRef.id);
+                    })
+                    .catch(function(error) {
+                        console.error("Error adding document: ", error);
+                    });
+                } else {
+                    // Si existe, actualizar el total del cliente
+                    querySnapshot.forEach(function(doc) {
+                        var existingTotal = parseFloat(doc.data().saldo);  // Convertir a número
+                        var newTotal = existingTotal + total;  // Sumar el nuevo total al existente
+
+                        // Actualizar el saldo
+                        db.collection("users").doc(doc.id).update({
+                            saldo: newTotal
+                        })
+                        .then(function() {
+                            console.log("Document successfully updated!");
+                        })
+                        .catch(function(error) {
+                            console.error("Error updating document: ", error);
+                        });
+                    });
+                }
+            })
+            .catch(function(error) {
+                console.error("Error checking for existing document: ", error);
+            });
+        });
+    };
+    
+    reader.readAsBinaryString(file);
+}

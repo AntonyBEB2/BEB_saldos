@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+
+    <title>Registro de saldos Firebase</title>
+
+    <!-- Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/11.3.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore-compat.js"></script>
+
+    <!-- SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/4.6.0/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.6.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-auth.js"></script>
+
+    <!-- Firestore & Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-firestore.js"></script>
+ 
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="my-3">Registrar Usuarios</h1>
+
+      <!-- Cargar archivo Excel -->
+      <input type="file" id="excel-file" class="form-control my-3" onchange="leerExcel(event)">
+
+      <br>
+      <!-- Campos para editar un cliente (ocultos inicialmente) -->
+      <!-- Campos para editar un cliente (ocultos inicialmente) -->
+      <div id="editFields" style="display: none;">
+        <h2>Editar cliente</h2>
+    
+        <label for="dni">DNI:</label>
+        <input type="text" id="dni" placeholder="DNI" class="form-control my-3">
+    
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" placeholder="Nombre" class="form-control my-3">
+    
+        <label for="total">Total:</label>
+        <input type="text" id="total" placeholder="Total" class="form-control my-3">
+        
+        <!-- NUEVOS CAMPOS -->
+        <label for="depositado">Depositado:</label>
+        <input type="text" id="depositado" placeholder="Depositado" class="form-control my-3">
+    
+        <label for="tarjeta">Tarjeta:</label>
+        <input type="text" id="tarjeta" placeholder="Tarjeta" class="form-control my-3">
+    
+        <button class="btn btn-info" id="boton" onclick="guardarEdicion()">Guardar</button>
+    </div>
+
+    <!-- Mensaje de éxito o error -->
+<div id="mensaje-exito" class="alert text-center" style="display: none;"></div>
+
+    
+
+      <!-- Formulario de registro para DNI y nombre -->
+      <h1>Registro para visualizacion</h1>
+      <input type="text" id="nuevoDni" placeholder="DNI" class="form-control my-3">
+      <input type="text" id="nuevoNombre" placeholder="Nombre" class="form-control my-3">
+      <button class="btn btn-success" onclick="registrarUsuario()">Registrar Usuario</button>
+
+      <br><br>
+      <h1>Administracion</h1>
+
+      <!-- Información del usuario -->
+      <div id="nombre-usuario" class="my-3"></div>
+      <div id="dni-usuario" class="my-3"></div>
+      <div id="saldo-usuario" class="my-3"></div>
+      <div id="tipo-dato" class="my-3"></div>
+
+      <!-- Cuentas de ahorro -->
+      <div id="cuentas-ahorro" class="my-3"></div>
+
+      <!-- Botón de cierre de sesión -->
+      <button class="btn btn-danger" onclick="logout()">Cerrar sesión</button>
+      <br><br>
+      <table class="table my-3">
+        <thead>
+          <tr>
+            <th scope="col">Id</th>
+            <th scope="col">DNI</th>
+            <th scope="col">Apellidos y nombres</th>
+            <th scope="col">Total</th>
+            <th scope="col">Depositado</th> <!-- Nueva columna -->
+            <th scope="col">Tarjeta</th> <!-- Nueva columna -->
+            <th scope="col">Eliminar</th>
+            <th scope="col">Editar</th>
+          </tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+      </table>
+    </div>
+    <!-- Optional JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
+    <script src="app.js"></script>
+
+    <script>
+      // Verificar autenticación al cargar la página
+      window.onload = function () {
+          firebase.auth().onAuthStateChanged(function (user) {
+              if (!user) {
+                  // Si el usuario NO está autenticado, redirigirlo al login
+                  window.location.href = "index.html";
+              } else {
+                  // Obtener el email del usuario autenticado
+                  //var email = user.email;
+                  var dni = parseInt(localStorage.getItem('dni'), 10);
+                  // Mostrar el DNI
+                  //document.getElementById('nombre-usuario').textContent = "DNI: " + dni;
+
+                  // Consultar Firestore para obtener el DNI del usuario autenticado
+                  var db = firebase.firestore();
+                  db.collection("users").where("doc", "==", dni).get()
+                      .then(function (querySnapshot) {
+                          if (!querySnapshot.empty) {
+                              querySnapshot.forEach(function (doc) {
+                                  var userData = doc.data();
+
+                                 // var userDni = String(userData.doc); // Asegurar que sea string para comparación segura
+
+                                    // Mostrar datos del usuario
+                                    document.getElementById('dni-usuario').textContent = "ADMIN: " + userData.doc;
+                                    document.getElementById('tipo-dato').textContent = "Tipo de dato: " + typeof userData;
+                                // Verificar si el usuario es el administrador
+                                if (userData.doc !== 909090) {
+                                // Redirigir a login.html si no es administrador
+                                  window.location.href = "index.html";
+                                }
+                                  
+                              });
+                  
+                          } else {
+                              console.log("Usuario no encontrado en Firestore.");
+                              window.location.href = "login.html";
+                          }
+                      })
+                      .catch(function (error) {
+                          console.error("Error verificando permisos: ", error);
+                          window.location.href = "index.html";
+                      });
+              }
+          });
+      };
+  
+      // Función para cerrar sesión
+      function logout() {
+          firebase.auth().signOut().then(() => {
+              window.location.href = "index.html";
+          }).catch(error => {
+              console.error("Error al cerrar sesión: ", error);
+          });
+      }
+  </script>
+  
+  
+    
+  </body>
+</html>
