@@ -1,8 +1,8 @@
 // Configuración de Firebase
 firebase.initializeApp({
-    apiKey: "AIzaSyC8Ys-PGjwB7DhV-Gm5Jdc23Y3VEXx34qc",
-    authDomain: "proyectousuarios-bac50.firebaseapp.com",
-    projectId: "proyectousuarios-bac50"
+    apiKey: "",
+    authDomain: "",
+    projectId: ""
 });
 
 // Inicializar Firebase Authentication y Firestore
